@@ -47,6 +47,17 @@ export default function BriefingForm() {
   const [files, setFiles] = useState<Record<string, File[]>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [affiliateLink, setAffiliateLink] = useState('https://www.hostgator.com.br/afiliados');
+
+  React.useEffect(() => {
+    fetch('/api/public/data')
+      .then(res => res.json())
+      .then(data => {
+        if (data.settings?.affiliateLink) {
+          setAffiliateLink(data.settings.affiliateLink);
+        }
+      });
+  }, []);
 
   const { getRootProps, getInputProps } = useDropzone({ 
     onDrop: (f) => onDrop(f, 'assets') 
@@ -314,7 +325,7 @@ export default function BriefingForm() {
                       </p>
                       <div className="flex flex-wrap gap-4">
                         <a 
-                          href="https://www.hostgator.com.br/afiliados" 
+                          href={affiliateLink} 
                           target="_blank" 
                           className="nex-button-primary px-6 py-3 rounded-xl text-xs"
                         >

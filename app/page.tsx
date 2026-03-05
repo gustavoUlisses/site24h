@@ -27,7 +27,7 @@ export default function LandingPage() {
   const [portfolio, setPortfolio] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/admin/data')
+    fetch('/api/public/data')
       .then(res => res.json())
       .then(data => setPortfolio(data.portfolio || []));
   }, []);

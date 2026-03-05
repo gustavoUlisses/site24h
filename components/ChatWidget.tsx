@@ -45,8 +45,16 @@ export default function ChatWidget() {
     if (!id) return;
 
     // Initialize socket
-    const socket = io();
+    const socket = io({
+      reconnectionAttempts: 3,
+      timeout: 5000,
+      transports: ['websocket', 'polling']
+    });
     socketRef.current = socket;
+
+    socket.on('connect_error', (err) => {
+      console.warn('Socket connection failed (expected on Vercel):', err.message);
+    });
 
     socket.emit('join_chat', id);
 

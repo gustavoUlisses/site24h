@@ -46,7 +46,15 @@ export default function AdminDashboard() {
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const fetchData = async () => {
-    const res = await fetch('/api/admin/data');
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch('/api/admin/data', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.status === 401) {
+      localStorage.removeItem('admin_token');
+      setIsLoggedIn(false);
+      return;
+    }
     const d = await res.json();
     setData(d);
   };
@@ -58,8 +66,16 @@ export default function AdminDashboard() {
       fetchData();
     }
 
-    const socket = io();
+    const socket = io({
+      reconnectionAttempts: 3,
+      timeout: 5000,
+      transports: ['websocket', 'polling']
+    });
     socketRef.current = socket;
+
+    socket.on('connect_error', (err) => {
+      console.warn('Socket connection failed (expected on Vercel):', err.message);
+    });
 
     socket.on('admin_notification', (msg) => {
       // In a real app, show a toast or notification
@@ -99,9 +115,13 @@ export default function AdminDashboard() {
   };
 
   const updateStatus = async (id: string, status: string) => {
+    const token = localStorage.getItem('admin_token');
     await fetch(`/api/admin/briefing/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ status }),
     });
     fetchData();
@@ -109,12 +129,16 @@ export default function AdminDashboard() {
 
   const addPortfolio = async (e: React.FormEvent) => {
     e.preventDefault();
+    const token = localStorage.getItem('admin_token');
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const item = Object.fromEntries(formData.entries());
     await fetch('/api/admin/portfolio', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(item),
     });
     fetchData();
@@ -122,18 +146,26 @@ export default function AdminDashboard() {
   };
 
   const deletePortfolio = async (id: string) => {
-    await fetch(`/api/admin/portfolio/${id}`, { method: 'DELETE' });
+    const token = localStorage.getItem('admin_token');
+    await fetch(`/api/admin/portfolio/${id}`, { 
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     fetchData();
   };
 
   const updateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+    const token = localStorage.getItem('admin_token');
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const settings = Object.fromEntries(formData.entries());
     await fetch('/api/admin/settings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(settings),
     });
     fetchData();
