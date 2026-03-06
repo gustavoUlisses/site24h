@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const portfolio = await prisma.portfolioItem.findMany();
+  const affiliateSetting = await prisma.setting.findUnique({
+    where: { key: 'affiliateLink' }
+  });
+
   return NextResponse.json({
-    portfolio: db.portfolio,
+    portfolio,
     settings: {
-      affiliateLink: db.settings.affiliateLink
+      affiliateLink: affiliateSetting?.value || 'https://www.hostgator.com.br/afiliados'
     }
   });
 }

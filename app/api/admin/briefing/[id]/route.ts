@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { verifyAdmin } from '@/lib/auth';
 
 export async function PATCH(
@@ -15,14 +15,14 @@ export async function PATCH(
     const { id } = await params;
     const { status } = await request.json();
     
-    const briefing = db.briefings.find(b => b.id === id);
-    if (briefing) {
-      briefing.status = status;
-      return NextResponse.json({ success: true });
-    }
+    await prisma.briefing.update({
+      where: { id },
+      data: { status }
+    });
     
-    return NextResponse.json({ success: false }, { status: 404 });
+    return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Update briefing error:', error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }

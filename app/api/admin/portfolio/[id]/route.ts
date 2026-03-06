@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { verifyAdmin } from '@/lib/auth';
 
 export async function DELETE(
@@ -13,9 +13,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    db.portfolio = db.portfolio.filter(p => p.id !== id);
+    await prisma.portfolioItem.delete({
+      where: { id }
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Delete portfolio item error:', error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }

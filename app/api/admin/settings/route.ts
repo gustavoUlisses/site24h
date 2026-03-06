@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { verifyAdmin } from '@/lib/auth';
 
 export async function POST(request: Request) {
@@ -10,9 +10,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    db.settings = { ...db.settings, ...body };
+    
+    // Update each setting provided in the body
+    for (const [key, value] of Object.entries(body)) {
+      await prisma.setting.upsert({
+        where: { key },
+        update: { value: String(value) },
+        create: { key, value: String(value) }
+      });
+    }
+    
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Update settings error:', error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }
